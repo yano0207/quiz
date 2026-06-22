@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>総合ランキング</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background: #f0f2f5; color: #333; text-align: center; }
+        .card { background: white; max-width: 500px; margin: 30px auto; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: center; }
+        th { background-color: #007bff; color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .top3 { font-weight: bold; color: #ff9900; }
+        button { background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <div class="card">
+        <h2 id="ranking-title">🏆 ランキング</h2>
+        <p>同じ点数の場合、タイムが短い人が上位になります。</p>
+        <button onclick="loadRanking()">🔄 順位を更新する</button>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>順位</th>
+                    <th>名前</th>
+                    <th>スコア</th>
+                    <th>タイム</th>
+                </tr>
+            </thead>
+            <tbody id="ranking-table-body">
+                <tr><td colspan="4">読み込み中...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://yxrxolblpkcxkvndxcax.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4cnhvbGJscGtjeGt2bmR4Y2F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNjM4MTAsImV4cCI6MjA5NzYzOTgxMH0.TjuBWCuo2U5LwoqCxo2kAf3ouVsw634BsEzSc-SQcQs';
+        const db = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        // URLからどの分野かを取得
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentCategory = urlParams.get('cat') || 'history'; // デフォルト
+        
+        // タイトルとテーブル名の設定
+        const categoryNames = { history: "📜 歴史クイズ", science: "🔬 科学クイズ" };
+        document.getElementById('ranking-title').innerText = "🏆 " + categoryNames[currentCategory] + " ランキング";
+        const tableName = 'rankings_' + currentCategory;
+
+        async function loadRanking() {
+            const tbody = document.getElementById("ranking-table-body");
+            try {
+                // 自動で判別したテーブル名からデータを取得
+                const { data, error } = await db
+                    .from(tableName)
+                    .select('*')
+                    .order('score', { ascending: false })
+                    .order('time', { ascending: true });
+                
+                if(error) throw error;
+
+                tbody.innerHTML = "";
+                if(!data || data.length === 0) {
+                    tbody.innerHTML = "<tr><td colspan='4'>まだデータがありません</td></tr>";
+                    return;
+                }
+
+                data.forEach((user, index) => {
+                    const tr = document.createElement("tr");
+                    let rank = index + 1;
+                    let rankClass = rank <= 3 ? "class='top3'" : "";
+                    
+                    const displayTime = Number(user.time).toFixed(1);
+                    
+                    tr.innerHTML = `
+                        <td ${rankClass}>${rank}位</td>
+                        <td>${user.name}</td>
+                        <td style="font-weight:bold; color:#007bff;">${user.score}点</td>
+                        <td>${displayTime}秒</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                tbody.innerHTML = "<tr><td colspan='4' style='color:red;'>データの取得に失敗しました</td></tr>";
+                console.error(err);
+            }
+        }
+        
+        loadRanking();
+    </script>
+</body>
+</html>

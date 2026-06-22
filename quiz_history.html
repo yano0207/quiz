@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歴史クイズ</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background: #f0f2f5; color: #333; text-align: center; }
+        .card { background: white; max-width: 500px; margin: 30px auto; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .page { display: none; }
+        .active { display: block; }
+        input, button { font-size: 16px; padding: 10px; margin: 10px; width: 80%; max-width: 300px; border-radius: 5px; border: 1px solid #ccc; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0056b3; }
+        .choice-btn { background: #28a745; margin: 5px; }
+        .choice-btn:hover { background: #218838; }
+        .retry-btn { background: #ff9900; margin-top: 20px; }
+        .retry-btn:hover { background: #e68a00; }
+        .back-btn { background: #6c757d; margin-top: 10px; }
+        #timer { font-size: 20px; color: #dc3545; font-weight: bold; margin-bottom: 10px; }
+        .explanation-box { text-align: left; background: #eee; padding: 10px; margin-top: 10px; border-radius: 5px; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <div class="card">
+        <div id="start-page" class="page active">
+            <h2>📜 歴史クイズ</h2>
+            <input type="text" id="username" placeholder="名前を入力してください">
+            <button onclick="startQuiz()">問題を始める</button>
+            <button class="back-btn" onclick="location.href='index.html'">メニューに戻る</button>
+        </div>
+
+        <div id="quiz-page" class="page">
+            <div id="timer">経過時間: 0.0秒</div>
+            <h3 id="question-number">第 1 問</h3>
+            <p id="question-text" style="font-size: 18px; font-weight: bold;"></p>
+            <div id="choices"></div>
+        </div>
+
+        <div id="result-page" class="page">
+            <h2>🎉 クイズ終了！</h2>
+            <p id="total-score" style="font-size: 22px; font-weight: bold; color: #007bff;"></p>
+            <button class="retry-btn" onclick="startQuiz()">🔄 もう一度挑戦する</button>
+            <hr>
+            <button class="back-btn" onclick="location.href='index.html'">メニューに戻る</button>
+            <p><a href="ranking.html?cat=history" target="_blank" style="font-size: 18px; color: #007bff; font-weight: bold;">👉 ランキングを見る</a></p>
+            <hr>
+            <h3>❌ 間違えた問題の解説</h3>
+            <div id="explanation"></div>
+        </div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://yxrxolblpkcxkvndxcax.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4cnhvbGJscGtjeGt2bmR4Y2F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNjM4MTAsImV4cCI6MjA5NzYzOTgxMH0.TjuBWCuo2U5LwoqCxo2kAf3ouVsw634BsEzSc-SQcQs';
+        const db = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // ★ 歴史のテーブル名
+        const tableName = 'rankings_history';
+
+        // ★ 歴史の問題データ
+        const originalQuestions = [
+            { q: "日本の現在の元号は何でしょう？", c: ["平成", "令和", "昭和", "大正"], a: 1, exp: "現在の元号は「令和」です。" },
+            { q: "徳川家康が開いた幕府は？", c: ["鎌倉幕府", "室町幕府", "江戸幕府", "平安京"], a: 2, exp: "1603年に江戸幕府を開きました。" }
+        ];
+
+        let activeQuestions = [], currentIdx = 0, score = 0, startTime, timerInterval, username = "", wrongAnswers = [];
+
+        function shuffleArray(arr) {
+            const array = arr.slice();
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function startQuiz() {
+            username = document.getElementById("username").value.trim();
+            if (!username) return alert("名前を入力してください！");
+            
+            currentIdx = 0; score = 0; wrongAnswers = [];
+            if (timerInterval) clearInterval(timerInterval);
+            
+            activeQuestions = shuffleArray(originalQuestions);
+
+            document.getElementById("start-page").classList.remove("active");
+            document.getElementById("result-page").classList.remove("active");
+            document.getElementById("quiz-page").classList.add("active");
+            
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                document.getElementById("timer").innerText = `経過時間: ${((Date.now() - startTime) / 1000).toFixed(1)}秒`;
+            }, 100);
+            
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if(currentIdx >= activeQuestions.length) return finishQuiz();
+            const qData = activeQuestions[currentIdx];
+            document.getElementById("question-number").innerText = `第 ${currentIdx + 1} 問 / 全 ${activeQuestions.length} 問`;
+            document.getElementById("question-text").innerText = qData.q;
+            
+            const choicesDiv = document.getElementById("choices");
+            choicesDiv.innerHTML = "";
+            let mappedChoices = qData.c.map((text, idx) => ({ text: text, originalIdx: idx }));
+            let shuffledChoices = shuffleArray(mappedChoices);
+            
+            shuffledChoices.forEach((choiceObj) => {
+                const btn = document.createElement("button");
+                btn.className = "choice-btn";
+                btn.innerText = choiceObj.text;
+                btn.onclick = () => checkAnswer(choiceObj.originalIdx, qData);
+                choicesDiv.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedOriginalIdx, qData) {
+            if(selectedOriginalIdx === qData.a) { score += 50; } // 1問50点
+            else { wrongAnswers.push({q: qData.q, your: qData.c[selectedOriginalIdx], correct: qData.c[qData.a], exp: qData.exp}); }
+            currentIdx++;
+            showQuestion();
+        }
+
+        async function finishQuiz() {
+            clearInterval(timerInterval);
+            const totalTime = parseFloat(((Date.now() - startTime) / 1000).toFixed(1));
+            
+            document.getElementById("quiz-page").classList.remove("active");
+            document.getElementById("result-page").classList.add("active");
+            document.getElementById("total-score").innerText = `点数: ${score}点 / かかった時間: ${totalTime.toFixed(1)}秒`;
+            
+            const expDiv = document.getElementById("explanation");
+            expDiv.innerHTML = "";
+            if(wrongAnswers.length === 0) {
+                expDiv.innerHTML = "<p style='color:green; font-weight:bold;'>全問正解！素晴らしいです！</p>";
+            } else {
+                wrongAnswers.forEach(item => {
+                    expDiv.innerHTML += `<div class="explanation-box"><b>問: ${item.q}</b><br><span style="color:red;">あなたの回答: ${item.your}</span><br><span style="color:green; font-weight:bold;">正解: ${item.correct}</span><br><p style="margin-top:5px; font-size:14px; color:#555;">💡解説: ${item.exp}</p></div>`;
+                });
+            }
+            
+            const { data: existingUser } = await db.from(tableName).select('*').eq('name', username).maybeSingle();
+            if (existingUser) {
+                if (score > existingUser.score || (score === existingUser.score && totalTime < existingUser.time)) {
+                    await db.from(tableName).update({ score: score, time: totalTime }).eq('id', existingUser.id);
+                }
+            } else {
+                await db.from(tableName).insert([{ name: username, score: score, time: totalTime }]);
+            }
+        }
+    </script>
+</body>
+</html>
