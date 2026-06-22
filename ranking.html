@@ -45,10 +45,10 @@
 
         // URLからどの分野かを取得
         const urlParams = new URLSearchParams(window.location.search);
-        const currentCategory = urlParams.get('cat') || 'history'; // デフォルト
+        const currentCategory = urlParams.get('cat') || 'quiz1'; // デフォルト
         
         // タイトルとテーブル名の設定
-        const categoryNames = { history: "金属(1)", science: "金属(2)" };
+        const categoryNames = { quiz1: "金属(1)", quiz2: "金属(2)" };
         document.getElementById('ranking-title').innerText = "🏆 " + categoryNames[currentCategory] + " ランキング";
         const tableName = 'rankings_' + currentCategory;
 
