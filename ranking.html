@@ -48,7 +48,7 @@
         const currentCategory = urlParams.get('cat') || 'history'; // デフォルト
         
         // タイトルとテーブル名の設定
-        const categoryNames = { history: "📜 歴史クイズ", science: "🔬 科学クイズ" };
+        const categoryNames = { history: "金属(1)", science: "金属(2)" };
         document.getElementById('ranking-title').innerText = "🏆 " + categoryNames[currentCategory] + " ランキング";
         const tableName = 'rankings_' + currentCategory;
 
