@@ -26,7 +26,7 @@
 
     <div class="card">
         <div id="start-page" class="page active">
-            <h2>🔬 科学クイズ</h2>
+            <h2>金属(2)</h2>
             <input type="text" id="username" placeholder="名前を入力してください">
             <button onclick="startQuiz()">問題を始める</button>
             <button class="back-btn" onclick="location.href='index.html'">メニューに戻る</button>
@@ -40,14 +40,14 @@
         </div>
 
         <div id="result-page" class="page">
-            <h2>🎉 クイズ終了！</h2>
+            <h2>クイズ終了！</h2>
             <p id="total-score" style="font-size: 22px; font-weight: bold; color: #007bff;"></p>
-            <button class="retry-btn" onclick="startQuiz()">🔄 もう一度挑戦する</button>
+            <button class="retry-btn" onclick="startQuiz()"> もう一度挑戦する</button>
             <hr>
             <button class="back-btn" onclick="location.href='index.html'">メニューに戻る</button>
             <p><a href="ranking.html?cat=science" target="_blank" style="font-size: 18px; color: #007bff; font-weight: bold;">👉 ランキングを見る</a></p>
             <hr>
-            <h3>❌ 間違えた問題の解説</h3>
+            <h3>間違えた問題の解説</h3>
             <div id="explanation"></div>
         </div>
     </div>
@@ -119,7 +119,7 @@
         }
 
         function checkAnswer(selectedOriginalIdx, qData) {
-            if(selectedOriginalIdx === qData.a) { score += 50; } // 1問50点
+            if(selectedOriginalIdx === qData.a) { score += 1; } // 1問1点
             else { wrongAnswers.push({q: qData.q, your: qData.c[selectedOriginalIdx], correct: qData.c[qData.a], exp: qData.exp}); }
             currentIdx++;
             showQuestion();
