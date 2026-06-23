@@ -41,15 +41,17 @@
     <script>
         const supabaseUrl = 'https://yxrxolblpkcxkvndxcax.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4cnhvbGJscGtjeGt2bmR4Y2F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNjM4MTAsImV4cCI6MjA5NzYzOTgxMH0.TjuBWCuo2U5LwoqCxo2kAf3ouVsw634BsEzSc-SQcQs';
-        const db = window.supabase.createClient(supabaseUrl, supabaseKey);
+        const db = window.supabase.createClient(supabaseUrl, supabaseKey); // ★ 変数名をdbに統一
 
         // URLからどの分野かを取得
         const urlParams = new URLSearchParams(window.location.search);
-        const currentCategory = urlParams.get('cat') || 'quiz1'; // デフォルト
+        const currentCategory = urlParams.get('cat') || 'quiz1';
         
         // タイトルとテーブル名の設定
         const categoryNames = { quiz1: "金属(1)", quiz2: "金属(2)" };
-        document.getElementById('ranking-title').innerText = "🏆 " + categoryNames[currentCategory] + " ランキング";
+        const titleText = categoryNames[currentCategory] || currentCategory;
+        document.getElementById('ranking-title').innerText = "🏆 " + titleText + " ランキング";
+        
         const tableName = 'rankings_' + currentCategory;
 
         async function loadRanking() {
@@ -62,10 +64,10 @@
                     .order('score', { ascending: false })
                     .order('time', { ascending: true });
                 
-                if(error) throw error;
+                if (error) throw error;
 
                 tbody.innerHTML = "";
-                if(!data || data.length === 0) {
+                if (!data || data.length === 0) {
                     tbody.innerHTML = "<tr><td colspan='4'>まだデータがありません</td></tr>";
                     return;
                 }
