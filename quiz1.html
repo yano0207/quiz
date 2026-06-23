@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>歴史クイズ</title>
+    <title>金属(1) クイズ</title>
     <style>
         body { font-family: sans-serif; margin: 20px; background: #f0f2f5; color: #333; text-align: center; }
         .card { background: white; max-width: 500px; margin: 30px auto; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -42,12 +42,12 @@
         <div id="result-page" class="page">
             <h2>クイズ終了！</h2>
             <p id="total-score" style="font-size: 22px; font-weight: bold; color: #007bff;"></p>
-            <button class="retry-btn" onclick="startQuiz()"> もう一度挑戦する</button>
+            <button class="retry-btn" onclick="startQuiz()">もう一度挑戦する</button>
             <hr>
             <button class="back-btn" onclick="location.href='index.html'">メニューに戻る</button>
             <p><a href="ranking.html?cat=quiz1" target="_blank" style="font-size: 18px; color: #007bff; font-weight: bold;">👉 ランキングを見る</a></p>
             <hr>
-            <h3> 間違えた問題の解説</h3>
+            <h3>間違えた問題の解説</h3>
             <div id="explanation"></div>
         </div>
     </div>
@@ -57,13 +57,12 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4cnhvbGJscGtjeGt2bmR4Y2F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNjM4MTAsImV4cCI6MjA5NzYzOTgxMH0.TjuBWCuo2U5LwoqCxo2kAf3ouVsw634BsEzSc-SQcQs';
         const db = window.supabase.createClient(supabaseUrl, supabaseKey);
         
-        // ★ 歴史のテーブル名
         const tableName = 'rankings_quiz1';
 
-        // ★ 歴史の問題データ
+        // ★ 金属(1)の問題データ（ここをご自由に変更してください）
         const originalQuestions = [
-            { q: "日本の現在の元号は何でしょう？", c: ["平成", "令和", "昭和", "大正"], a: 1, exp: "現在の元号は「令和」です。" },
-            { q: "徳川家康が開いた幕府は？", c: ["鎌倉幕府", "室町幕府", "江戸幕府", "平安京"], a: 2, exp: "1603年に江戸幕府を開きました。" }
+            { q: "最も電気を通しやすい金属（常温）はどれ？", c: ["金", "銀", "銅", "アルミニウム"], a: 1, exp: "一番電気を通しやすいのは「銀」、2番目が「銅」です。" },
+            { q: "鉄がサビる原因となる、空気中の気体は？", c: ["窒素", "二酸化炭素", "水素", "酸素"], a: 3, exp: "鉄が空気中の「酸素」と結びつくことでサビ（酸化鉄）になります。" }
         ];
 
         let activeQuestions = [], currentIdx = 0, score = 0, startTime, timerInterval, username = "", wrongAnswers = [];
@@ -99,7 +98,7 @@
         }
 
         function showQuestion() {
-            if(currentIdx >= activeQuestions.length) return finishQuiz();
+            if (currentIdx >= activeQuestions.length) return finishQuiz();
             const qData = activeQuestions[currentIdx];
             document.getElementById("question-number").innerText = `第 ${currentIdx + 1} 問 / 全 ${activeQuestions.length} 問`;
             document.getElementById("question-text").innerText = qData.q;
@@ -119,7 +118,7 @@
         }
 
         function checkAnswer(selectedOriginalIdx, qData) {
-            if(selectedOriginalIdx === qData.a) { score += 1; } // 1問1点
+            if (selectedOriginalIdx === qData.a) { score += 1; }
             else { wrongAnswers.push({q: qData.q, your: qData.c[selectedOriginalIdx], correct: qData.c[qData.a], exp: qData.exp}); }
             currentIdx++;
             showQuestion();
@@ -135,7 +134,7 @@
             
             const expDiv = document.getElementById("explanation");
             expDiv.innerHTML = "";
-            if(wrongAnswers.length === 0) {
+            if (wrongAnswers.length === 0) {
                 expDiv.innerHTML = "<p style='color:green; font-weight:bold;'>全問正解！素晴らしいです！</p>";
             } else {
                 wrongAnswers.forEach(item => {
